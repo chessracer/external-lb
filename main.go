@@ -19,9 +19,12 @@ import (
 )
 
 const (
-	EnvVarPollInterval         = "POLL_INTERVAL"
-	EnvVarForceUpdateInterval  = "FORCE_UPDATE_INTERVAL"
-	EnvVarServiceLabelEndpoint = "SERVICE_LABEL_ENDPOINT"
+	DefaultPollInterval          = "1000"
+	DefaultForceUpdateInterval   = "1"
+	DefaultLBTargetRancherSuffix = "rancher.internal"
+	EnvVarPollInterval           = "POLL_INTERVAL"
+	EnvVarForceUpdateInterval    = "FORCE_UPDATE_INTERVAL"
+	EnvVarLBTargetRancherSuffix  = "LB_TARGET_RANCHER_SUFFIX"
 )
 
 var (
@@ -63,8 +66,8 @@ func setEnv() {
 	// initialize polling and forceUpdate intervals
 	i = os.Getenv(EnvVarForceUpdateInterval)
 	if i == "" {
-		logrus.Info(EnvVarForceUpdateInterval + " is not set, using default value '1'")
-		i = "1"
+		logrus.Info(EnvVarForceUpdateInterval + " is not set, using default value " + DefaultForceUpdateInterval)
+		i = DefaultForceUpdateInterval
 	}
 
 	// if metadata wasn't updated in 1 min, force update would be executed
@@ -75,8 +78,8 @@ func setEnv() {
 
 	p = os.Getenv(EnvVarPollInterval)
 	if p == "" {
-		logrus.Info(EnvVarPollInterval + " is not set, using default value '1000'")
-		p = "1000"
+		logrus.Info(EnvVarPollInterval + " is not set, using default value " + DefaultPollInterval)
+		p = DefaultPollInterval
 	}
 
 	pollInterval, err = strconv.ParseFloat(i, 64)
@@ -114,10 +117,10 @@ func setEnv() {
 		logrus.Fatalf("Failed to initialize provider '%s': %v", *providerName, err)
 	}
 
-	targetPoolSuffix = os.Getenv("LB_TARGET_RANCHER_SUFFIX")
+	targetPoolSuffix = os.Getenv(EnvVarLBTargetRancherSuffix)
 	if len(targetPoolSuffix) == 0 {
-		logrus.Info("LB_TARGET_RANCHER_SUFFIX is not set, using default suffix 'rancher.internal'")
-		targetPoolSuffix = "rancher.internal"
+		logrus.Info(EnvVarLBTargetRancherSuffix + " is not set, using default suffix " + DefaultLBTargetRancherSuffix)
+		targetPoolSuffix = DefaultLBTargetRancherSuffix
 	}
 
 }
