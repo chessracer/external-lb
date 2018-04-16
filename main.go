@@ -19,8 +19,9 @@ import (
 )
 
 const (
-	EnvVarPollInterval        = "POLL_INTERVAL"
-	EnvVarForceUpdateInterval = "FORCE_UPDATE_INTERVAL"
+	EnvVarPollInterval         = "POLL_INTERVAL"
+	EnvVarForceUpdateInterval  = "FORCE_UPDATE_INTERVAL"
+	EnvVarServiceLabelEndpoint = "SERVICE_LABEL_ENDPOINT"
 )
 
 var (
@@ -34,6 +35,7 @@ var (
 	c        *CattleClient
 
 	targetPoolSuffix        string
+	serviceLabelEndpoint    string
 	metadataLBConfigsCached = make(map[string]model.LBConfig)
 
 	forceUpdateInterval float64
@@ -49,6 +51,14 @@ func setEnv() {
 	}
 
 	var err error
+
+	serviceLabelEndpoint = os.Getenv(EnvVarServiceLabelEndpoint)
+	if len(serviceLabelEndpoint) == 0 {
+		logrus.Info(EnvVarServiceLabelEndpoint + " is not set")
+		serviceLabelEndpoint = ""
+	} else {
+		logrus.Info(EnvVarServiceLabelEndpoint + " is set to: " + serviceLabelEndpoint)
+	}
 
 	// initialize polling and forceUpdate intervals
 	i = os.Getenv(EnvVarForceUpdateInterval)
@@ -143,7 +153,7 @@ func main() {
 
 		if update || updateForced {
 			// get records from metadata
-			metadataLBConfigs, err := m.GetMetadataLBConfigs(targetPoolSuffix)
+			metadataLBConfigs, err := m.GetMetadataLBConfigs(targetPoolSuffix, serviceLabelEndpoint)
 			if err != nil {
 				logrus.Errorf("Failed to get LB configs from metadata: %v", err)
 				continue

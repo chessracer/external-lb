@@ -22,6 +22,7 @@ The following environment variables are used to configure global options.
 |----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------|
 | POLL_INTERVAL | Value in milliseconds to check for rancher metadata updates | `1000` |
 | FORCE_UPDATE_INTERVAL | Value in minutes to force a resource poll. Increasing this value may be required if you run into api limits enforced by your cloud providor | `1` |
+| SERVICE_LABEL_ENDPOINT | Which label to search for elb names to update. Useful to customize if a single rancher env spans disparate cloud provider accounts, and multiple aws-elb services are required to access each one | `io.rancher.service.external_lb.endpoint` |
 
 Contact
 ========
