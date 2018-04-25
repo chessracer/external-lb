@@ -25,6 +25,7 @@ const (
 	EnvVarPollInterval           = "POLL_INTERVAL"
 	EnvVarForceUpdateInterval    = "FORCE_UPDATE_INTERVAL"
 	EnvVarLBTargetRancherSuffix  = "LB_TARGET_RANCHER_SUFFIX"
+	EnvVarServiceLabelEndpoint   = "SERVICE_LABEL_ENDPOINT"
 )
 
 var (
