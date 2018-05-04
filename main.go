@@ -19,13 +19,14 @@ import (
 )
 
 const (
-	DefaultPollInterval          = "1000"
-	DefaultForceUpdateInterval   = "1"
-	DefaultLBTargetRancherSuffix = "rancher.internal"
-	EnvVarPollInterval           = "POLL_INTERVAL"
-	EnvVarForceUpdateInterval    = "FORCE_UPDATE_INTERVAL"
-	EnvVarLBTargetRancherSuffix  = "LB_TARGET_RANCHER_SUFFIX"
-	EnvVarServiceLabelEndpoint   = "SERVICE_LABEL_ENDPOINT"
+	DefaultPollInterval              = "1000"
+	DefaultForceUpdateInterval       = "1"
+	DefaultLBTargetRancherSuffix     = "rancher.internal"
+	EnvVarPollInterval               = "POLL_INTERVAL"
+	EnvVarForceUpdateInterval        = "FORCE_UPDATE_INTERVAL"
+	EnvVarLBTargetRancherSuffix      = "LB_TARGET_RANCHER_SUFFIX"
+	EnvVarServiceLabelEndpoint       = "SERVICE_LABEL_ENDPOINT"
+	EnvVarRestrictServiceToSelfStack = "RESTRICT_SERVICE_TO_SELF_STACK"
 )
 
 var (
@@ -38,14 +39,15 @@ var (
 	m        *metadata.MetadataClient
 	c        *CattleClient
 
-	targetPoolSuffix        string
-	serviceLabelEndpoint    string
-	metadataLBConfigsCached = make(map[string]model.LBConfig)
-
-	forceUpdateInterval float64
-	pollInterval        float64
-	p                   string
-	i                   string
+	targetPoolSuffix           string
+	serviceLabelEndpoint       string
+	restrictServiceToSelfStack bool
+	metadataLBConfigsCached    = make(map[string]model.LBConfig)
+	forceUpdateInterval        float64
+	pollInterval               float64
+	p                          string
+	i                          string
+	r                          string
 )
 
 func setEnv() {
@@ -55,6 +57,19 @@ func setEnv() {
 	}
 
 	var err error
+
+	// optionally restrict the service to those running in same stack as external-lb
+	r = os.Getenv(EnvVarRestrictServiceToSelfStack)
+	if len(r) == 0 {
+		logrus.Info(EnvVarRestrictServiceToSelfStack + " is not set")
+		restrictServiceToSelfStack = false
+	} else {
+		restrictServiceToSelfStack, err = strconv.ParseBool(r)
+		if err != nil {
+			logrus.Fatalf("Failed to initialize restrictServiceToSelfStack: %v", err)
+		}
+		logrus.Info(EnvVarRestrictServiceToSelfStack + " is set to: " + strconv.FormatBool(restrictServiceToSelfStack))
+	}
 
 	serviceLabelEndpoint = os.Getenv(EnvVarServiceLabelEndpoint)
 	if len(serviceLabelEndpoint) == 0 {
@@ -157,7 +172,7 @@ func main() {
 
 		if update || updateForced {
 			// get records from metadata
-			metadataLBConfigs, err := m.GetMetadataLBConfigs(targetPoolSuffix, serviceLabelEndpoint)
+			metadataLBConfigs, err := m.GetMetadataLBConfigs(targetPoolSuffix, serviceLabelEndpoint, restrictServiceToSelfStack)
 			if err != nil {
 				logrus.Errorf("Failed to get LB configs from metadata: %v", err)
 				continue
