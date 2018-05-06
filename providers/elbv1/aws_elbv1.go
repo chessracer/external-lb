@@ -120,6 +120,7 @@ func (p *AWSELBv1Provider) GetLBConfigs() ([]model.LBConfig, error) {
 	}
 
 	for _, lb := range allLb {
+
 		if _, ok := lbTags[*lb.LoadBalancerName]; !ok {
 			continue
 		}
@@ -128,6 +129,13 @@ func (p *AWSELBv1Provider) GetLBConfigs() ([]model.LBConfig, error) {
 
 		var targetPoolName, servicePort string
 		var ok bool
+
+		logrus.Debugf("Working on lb %s with VPCId: %s", *lb.LoadBalancerName, *lb.VPCId)
+		if *lb.VPCId != p.vpcID {
+			logrus.Debugf("Skipping LB whose vpc %s does not match our vpc %s", *lb.VPCId, p.vpcID)
+			continue
+		}
+
 		if targetPoolName, ok = tags[TagNameTargetPool]; !ok {
 			logrus.Debugf("Skipping LB without targetPool tag: %s", *lb.LoadBalancerName)
 			continue
