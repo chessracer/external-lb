@@ -102,7 +102,7 @@ func (m *MetadataClient) GetMetadataLBConfigs(targetPoolSuffix string, serviceLa
 			logrus.Debugf("Service %s is running in stack %s", service.Name, service.StackName)
 			logrus.Debugf("external-lb is running in stack %s", selfStack.Name)
 			if restrictServiceToSelfStack && (service.StackName != selfStack.Name) {
-				logrus.Errorf("Skipping service %s as it is running in a different stack %s than external-lb: %s",
+				logrus.Debugf("Skipping service %s as it is running in a different stack %s than external-lb: %s",
 					service.Name, service.StackName, selfStack.Name)
 				continue
 			}
