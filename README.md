@@ -1,11 +1,11 @@
 external-lb
 ==========
-Rancher service facilitating integration of rancher with external load balancers. This service updates external LB with services created in Rancher that ask to be load balanced using an external LB. 
+Rancher service facilitating integration of rancher with external load balancers. This service updates external LB with services created in Rancher that ask to be load balanced using an external LB.
 Initial version comes with f5 BIG-IP support; but a pluggable provider model makes it easy to implement other providers later.
 
 Design
 ==========
-* The external-lb gets deployed as a Rancher service containerized app. 
+* The external-lb gets deployed as a Rancher service containerized app.
 
 * It enables any other service to be registered to external LB if the service has exposed a public port and has the label 'io.rancher.service.external_lb_endpoint'
 
@@ -22,6 +22,8 @@ The following environment variables are used to configure global options.
 |----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------|
 | POLL_INTERVAL | Value in milliseconds to check for rancher metadata updates | `1000` |
 | FORCE_UPDATE_INTERVAL | Value in minutes to force a resource poll. Increasing this value may be required if you run into api limits enforced by your cloud providor | `1` |
+| SERVICE_LABEL_ENDPOINT | Which label to search for elb names to update. Useful to customize if a single rancher env spans disparate cloud provider accounts, and multiple aws-elb services are required to access each one | `io.rancher.service.external_lb.endpoint` |
+| RESTRICT_SERVICE_TO_SELF_STACK | Limit service registration to those running in the same stack as the external-lb service | 'false' |
 
 Contact
 ========

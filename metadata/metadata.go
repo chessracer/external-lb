@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	metadataURLTemplate        = "http://%v/2015-12-19"
-	serviceLabelEndpoint       = "io.rancher.service.external_lb.endpoint"
-	serviceLabelEndpointLegacy = "io.rancher.service.external_lb_endpoint"
+	metadataURLTemplate         = "http://%v/2015-12-19"
+	serviceLabelEndpointLegacy  = "io.rancher.service.external_lb_endpoint"
+	DefaultServiceLabelEndpoint = "io.rancher.service.external_lb.endpoint"
 
 	// DefaultMetadataAddress specifies the default value to use if nothing is specified
 	DefaultMetadataAddress = "169.254.169.250"
@@ -70,9 +70,13 @@ func (m *MetadataClient) GetVersion() (string, error) {
 }
 
 // GetMetadataLBConfigs ...
-func (m *MetadataClient) GetMetadataLBConfigs(targetPoolSuffix string) (map[string]model.LBConfig, error) {
+func (m *MetadataClient) GetMetadataLBConfigs(targetPoolSuffix string, serviceLabelEndpoint string, restrictServiceToSelfStack bool) (map[string]model.LBConfig, error) {
+	if serviceLabelEndpoint == "" {
+		serviceLabelEndpoint = DefaultServiceLabelEndpoint
+	}
 	lbConfigs := make(map[string]model.LBConfig)
 	services, err := m.MetadataClient.GetServices()
+	selfStack, err := m.MetadataClient.GetSelfStack()
 	if err != nil {
 		logrus.Infof("Error reading services: %v", err)
 	} else {
@@ -91,6 +95,15 @@ func (m *MetadataClient) GetMetadataLBConfigs(targetPoolSuffix string) (map[stri
 			if ok {
 				logrus.Errorf("Endpoint %s already used by another service, will skip this service : %s",
 					endpoint, service.Name)
+				continue
+			}
+
+			// Skip the service if it does not exist in the desired stack (optional)
+			logrus.Debugf("Service %s is running in stack %s", service.Name, service.StackName)
+			logrus.Debugf("external-lb is running in stack %s", selfStack.Name)
+			if restrictServiceToSelfStack && (service.StackName != selfStack.Name) {
+				logrus.Debugf("Skipping service %s as it is running in a different stack %s than external-lb: %s",
+					service.Name, service.StackName, selfStack.Name)
 				continue
 			}
 
